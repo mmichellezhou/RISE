@@ -11,14 +11,15 @@ class OnlineAdAllocWithPred:
         self.dummyAdvertiser = []
         self.thresholds = [0] * self.numAdvertisers
         
+    # TODO
     def PRD(self, t):
         return 0
     
-    def maxDiscGain(self, t, thresholds):
+    def maxDiscGain(self, t):
         max = 0
         maxAdv = 0
-        for adv in range(0, self.numAdvertisers):
-            discGain = self.weights[adv][t] - thresholds[adv]
+        for adv in range(self.numAdvertisers):
+            discGain = self.weights[adv][t] - self.thresholds[adv]
             if (discGain > max):
                 max = discGain
                 maxAdv = adv
@@ -42,7 +43,7 @@ class OnlineAdAllocWithPred:
         # print(B, e, a)
         for t in range(self.numImpressions):
             advPRD = self.PRD(t)
-            advEXP = self.maxDiscGain(t, self.thresholds)
+            advEXP = self.maxDiscGain(t)
             discGainPRD = self.weights[advPRD][t] - self.thresholds[advPRD]
             discGainEXP = self.weights[advEXP][t] - self.thresholds[advEXP]
             # if discounted gain is negative, continue to next impression
