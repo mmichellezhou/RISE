@@ -1,5 +1,3 @@
-import bisect
-
 class OnlineAdAllocWithPred:
 
     def __init__(self, b, w):
@@ -28,7 +26,6 @@ class OnlineAdAllocWithPred:
     def updateThresh(self, adv, trust):
         B = self.budgets[adv]
         e = (1 + 1 / B) ** B
-        # print(adv, B, e)
         sum = 0
         i = 1
         for t in self.advertisers[adv]:
@@ -37,25 +34,27 @@ class OnlineAdAllocWithPred:
         return (e ** (trust/B) - 1) * sum / (e ** trust - 1)
     
     # O(n) time complexity
+    # inserts impression t into advertiser adv's list sorted by increasing weight
     # TODO make more efficient
-    def insert(self, adv, n):
+    def insert(self, adv, t):
         list = self.advertisers[adv]
-        index = len(list)
-        if index == 0:
-            list.append(n)
+        if len(list) == 0:
+            list.append(t)
         else:
+            index = 0
             for i in range(len(list)):
-                if self.weights[adv][list[i]] > self.weights[adv][n]:
+                print(self.weights[adv])
+                if self.weights[adv][list[i]] > self.weights[adv][t]:
                     index = i
                     break
-            list.insert(index, n)
+            list.insert(index, t)
+            
         return
 
     def algorithm1(self, trust):
         B = min(self.budgets)
         e = (1 + 1 / B) ** B
         a = B * (e ** (trust / B) - 1)
-        # print(B, e, a)
         for t in range(self.numImpressions):
             advPRD = self.PRD(t)
             advEXP = self.maxAdvDiscGain(t)
