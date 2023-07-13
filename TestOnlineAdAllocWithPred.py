@@ -38,14 +38,14 @@ if __name__ == "__main__":
     test2 = TestOnlineAdAllocWithPred([1, 1], [[0, 2, 50], [3, 10, 30]])
     test2.runAllTests(1)
     print("---------- test 3 ----------")
-    test2 = TestOnlineAdAllocWithPred([1, 1], [[0, 2, 50], [3, 10, 30]])
-    test2.runAllTests(2)
+    test3 = TestOnlineAdAllocWithPred([1, 1], [[0, 2, 50], [3, 10, 30]])
+    test3.runAllTests(2)
     print("---------- test 4 ----------")
-    test3 = TestOnlineAdAllocWithPred([3, 2], [[2, 10, 4, 0], [1, 16, 0, 9]])
-    test3.runAllTests(1)
+    test4 = TestOnlineAdAllocWithPred([3, 2], [[2, 10, 4, 0], [1, 16, 0, 9]])
+    test4.runAllTests(1)
     print("---------- test 5 ----------")
-    test3 = TestOnlineAdAllocWithPred([2, 1, 3, 1], [[5, 50, 7, 4], [1, 2, 8, 4], [10, 0, 9, 30], [3, 0, 13, 1]])
-    test3.runAllTests(3)
+    test5 = TestOnlineAdAllocWithPred([2, 1, 3, 1], [[5, 50, 7, 4], [1, 2, 8, 4], [10, 0, 9, 30], [3, 0, 13, 1]])
+    test5.runAllTests(3)
 
 
     
