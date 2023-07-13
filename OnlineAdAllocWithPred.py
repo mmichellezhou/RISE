@@ -36,6 +36,21 @@ class OnlineAdAllocWithPred:
             i += 1
         return (e ** (trust/B) - 1) * sum / (e ** trust - 1)
     
+    # O(n) time complexity
+    # TODO make more efficient
+    def insert(self, adv, n):
+        list = self.advertisers[adv]
+        index = len(list)
+        if index == 0:
+            list.append(n)
+        else:
+            for i in range(len(list)):
+                if self.weights[adv][list[i]] > self.weights[adv][n]:
+                    index = i
+                    break
+            list.insert(index, n)
+        return
+
     def algorithm1(self, trust):
         B = min(self.budgets)
         e = (1 + 1 / B) ** B
@@ -57,7 +72,7 @@ class OnlineAdAllocWithPred:
             # if advertiser a has reached their maximum budget, remove least valuable impression assigned to a
             if len(self.advertisers[adv]) == self.budgets[adv]:
                 self.dummyAdvertiser.append(self.advertisers[adv].pop(0))
-            bisect.insort(self.advertisers[adv], t)
+            self.insert(adv, t)
             self.thresholds[adv] = self.updateThresh(adv, trust)
         return self.advertisers
     
