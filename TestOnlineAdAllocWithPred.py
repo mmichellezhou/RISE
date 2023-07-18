@@ -15,16 +15,15 @@ class TestOnlineAdAllocWithPred:
         self.runtime = end - start
         for i in range(len(res)):
             print("Advertiser " + str(i) + ": " + str(res[i]))
-            print("\tweights: " + str([self.OAAWP.weights[i][j[0]] for j in res[i]]))
 
     def runPRD(self):
         return self.OAAWP.PRD()
 
     def printDummyAdvertiser(self):
-        print("Dummy advertiser: " + str(self.OAAWP.getDummyAdvertiser()))
+        print("Dummy advertiser: " + str(self.OAAWP.dummyAdvertiser))
 
     def printThresholds(self):
-        print("Thresholds: " + str(self.OAAWP.getThresholds()))
+        print("Thresholds: " + str(self.OAAWP.thresholds))
     
     def printRuntime(self):
         print("Runtime: " + str(self.runtime) + " s")
@@ -54,25 +53,28 @@ if __name__ == "__main__":
     # test5.runAllTests(3)
 
     # new manual tests
-    print("---------- test 1 ----------")
+    print("---------- manual test 1 ----------")
     test1 = TestOnlineAdAllocWithPred([2, 1], [(0, 0), (3, 1), (1, 2), (2, 3)], [[10, 12, 2, 1], [3, 7, 21, 6]])
     test1.runAllTests(1)
-    print("---------- test 2 ----------")
-    test2 = TestOnlineAdAllocWithPred([4, 3, 2], [(6, 0), (6, 1), (3, 2), (1, 3), (2, 4), (1, 5), (4, 6), (5, 7)], [[3, 10, 12, 4, 9, 2, 8, 1], [7, 22, 9, 6, 4, 5, 20, 16], [3, 3, 4, 16, 19, 1, 9, 5]])
-    test2.runAllTests(1.2)
-    print("---------- test 3 ----------")
-    test3 = TestOnlineAdAllocWithPred([3, 2, 3, 4], [(3, 0), (4, 1), (6, 2), (5, 3), (7, 4), (1, 5), (2, 6), (7, 7), (8, 8), (4, 9)], [[5, 17, 18, 14, 3, 2, 1, 1, 9, 15], [4, 12, 19, 5, 5, 3, 2, 15, 9, 8], [14, 13, 10, 9, 5, 6, 1, 3, 7, 7], [3, 5, 8, 10, 15, 10, 11, 6, 2, 2]])
-    test3.runAllTests(1.4)
 
     # synthetic tests
+    print("---------- synthetic test 1 ----------")
     sData1 = SyntheticData(10, 10, 10, 10)
     weights1 = sData1.expDistMat()
-    print(len(weights1), len(weights1[0]))
     sData1.gausDistList(10)
-    budgets1 = sData1.sampleBudgets(1, 25)
+    budgets1 = sData1.sampleBudgets(5, 20)
     impressions1 = sData1.sampleImps()
     sTest1 = TestOnlineAdAllocWithPred(budgets1, impressions1, weights1)
     sTest1.runAllTests(1)
+
+    # print("---------- synthetic test 2 ----------")
+    # sData2 = SyntheticData(10, 10, 20, 10)
+    # weights2 = sData2.expDistMat()
+    # sData2.gausDistList(10)
+    # budgets2 = sData2.sampleBudgets(5, 40)
+    # impressions2 = sData2.sampleImps()
+    # sTest2 = TestOnlineAdAllocWithPred(budgets2, impressions2, weights2)
+    # sTest2.runAllTests(2)
 
     
     

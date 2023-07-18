@@ -1,4 +1,5 @@
-from cvxopt import matrix, solvers
+import numpy as np
+from cvxopt import matrix, spmatrix, solvers
 
 class OnlineAdAllocWithPred:
 
@@ -47,28 +48,52 @@ class OnlineAdAllocWithPred:
     #     return
 
     # primal
+    # TODO make more efficient
     def PRD(self):
         # print("start PRD")
-        A = [[0.0] * (self.numAdvertisers + self.numImpressions + self.numAdvertisers * 
-                    self.numImpressions) for i in range(self.numAdvertisers * self.numImpressions)]
-        b = [0.0] * (self.numAdvertisers + self.numImpressions + self.numAdvertisers * 
-                    self.numImpressions)
-        c = [0.0] * (self.numAdvertisers * self.numImpressions)
-
-        b[:self.numAdvertisers] = [float(B) for B in self.budgets]
-        b[self.numAdvertisers : self.numAdvertisers + self.numImpressions] = [1.0] * self.numImpressions
+        # A = [[0.0] * (self.numAdvertisers + self.numImpressions + self.numAdvertisers * 
+        #             self.numImpressions) for i in range(self.numAdvertisers * self.numImpressions)]
+        # A = np.zeros((self.numAdvertisers * self.numImpressions, self.numAdvertisers + self.numImpressions + self.numAdvertisers * self.numImpressions))
+        x = np.array([])
+        I = np.array([])
+        J = np.array([])
+        # b = [0.0] * (self.numAdvertisers + self.numImpressions + self.numAdvertisers * 
+        #             self.numImpressions)
+        b = np.zeros(self.numAdvertisers + self.numImpressions + self.numAdvertisers * self.numImpressions)
+        # c = [0.0] * (self.numAdvertisers * self.numImpressions)
+        c = np.zeros(self.numAdvertisers * self.numImpressions)
+        
+        # b[:self.numAdvertisers] = np.array([float(B) for B in self.budgets])
+        b[self.numAdvertisers : self.numAdvertisers + self.numImpressions] = 1.0
+        
         for i in range(self.numAdvertisers):
             for j in range(self.numImpressions):
                 index = i * self.numImpressions + j
-                A[index][i] = 1.0
-                A[index][self.numAdvertisers + j] = 1.0
-                A[index][self.numAdvertisers + self.numImpressions + i * self.numImpressions + j] = -1.0
+                # A[index][i] = 1.0
+                # A[index][self.numAdvertisers + j] = 1.0
+                # A[index][self.numAdvertisers + self.numImpressions + i * self.numImpressions + j] = -1.0
+                x = np.append(x, [1.0, 1.0, -1.0])
+                I = np.append(I, [i, self.numAdvertisers + j, self.numAdvertisers + self.numImpressions + i * self.numImpressions + j])
+                J = np.append(J, [index, index, index])
                 c[index] = -1.0 * self.weights[i][self.impressions[j][0]]
+            b[i] = self.budgets[i]
         
-        sol = solvers.lp(matrix(c), matrix(A), matrix(b))
-        res = [[] for i in range(self.numAdvertisers)]
+        x = x.astype(float).tolist()
+        I = I.astype(int).tolist()
+        J = J.astype(int).tolist()
+
+        A = spmatrix(x, I, J)
+        b = matrix(b.tolist())
+        c = matrix(c.tolist())
+
+        # print("A:\n" + str(A) + "size: " + str(A.size) + ", typecode: " + str(A.typecode))
+        # print("b:\n" + str(b) + "size: " + str(b.size) + ", typecode: " + str(b.typecode))
+        # print("c:\n" + str(c) + "size: " + str(c.size) + ", typecode: " + str(c.typecode))
+
+        sol = solvers.lp(c, A, b)
+        res = [[] for adv in range(self.numAdvertisers)]
         for i in range(self.numImpressions):
-            ws = [sol['x'][j * self.numImpressions + i] for j in range(self.numAdvertisers)]
+            ws = [sol['x'][adv * self.numImpressions + i] for adv in range(self.numAdvertisers)]
             res[self.maxIndex(ws)].append(i)
         # print("end PRD")
         return res
@@ -159,9 +184,3 @@ class OnlineAdAllocWithPred:
             self.insert(adv, t)
             self.thresholds[adv] = self.updateThresh(adv, trust)
         return self.advertisers
-    
-    def getDummyAdvertiser(self):
-        return self.dummyAdvertiser
-
-    def getThresholds(self):
-        return self.thresholds
