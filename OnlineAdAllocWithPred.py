@@ -50,22 +50,13 @@ class OnlineAdAllocWithPred:
     # primal
     # TODO make more efficient
     def PRD(self):
-        # print("start PRD")
-        # A = [[0.0] * (self.numAdvertisers + self.numImpressions + self.numAdvertisers * 
-        #             self.numImpressions) for i in range(self.numAdvertisers * self.numImpressions)]
-        # A = np.zeros((self.numAdvertisers * self.numImpressions, self.numAdvertisers + self.numImpressions + self.numAdvertisers * self.numImpressions))
         x = np.array([])
         I = np.array([])
         J = np.array([])
-        # b = [0.0] * (self.numAdvertisers + self.numImpressions + self.numAdvertisers * 
-        #             self.numImpressions)
         b = np.zeros(self.numAdvertisers + self.numImpressions + self.numAdvertisers * self.numImpressions)
-        # c = [0.0] * (self.numAdvertisers * self.numImpressions)
         c = np.zeros(self.numAdvertisers * self.numImpressions)
-        
-        # b[:self.numAdvertisers] = np.array([float(B) for B in self.budgets])
+
         b[self.numAdvertisers : self.numAdvertisers + self.numImpressions] = 1.0
-        
         for i in range(self.numAdvertisers):
             for j in range(self.numImpressions):
                 index = i * self.numImpressions + j
@@ -81,7 +72,6 @@ class OnlineAdAllocWithPred:
         x = x.astype(float).tolist()
         I = I.astype(int).tolist()
         J = J.astype(int).tolist()
-
         A = spmatrix(x, I, J)
         b = matrix(b.tolist())
         c = matrix(c.tolist())
@@ -95,23 +85,7 @@ class OnlineAdAllocWithPred:
         for i in range(self.numImpressions):
             ws = [sol['x'][adv * self.numImpressions + i] for adv in range(self.numAdvertisers)]
             res[self.maxIndex(ws)].append(i)
-        # print("end PRD")
         return res
-
-        # sols = []
-        # res = [[] for i in range(self.numAdvertisers)] 
-        # for i in range(self.numAdvertisers):
-        #     print("A: " + str(A))
-        #     print("b: " + str(matrix(b)))
-        #     print("c: " + str(matrix(c[i])))
-        #     sol = solvers.lp(matrix(c[i]), matrix(A), matrix(b))
-        #     sols.append(sol)
-        #     # for j in range(len(sol['x'])):
-        #     #     print(sol['x'][j])
-        # for i in range(self.numImpressions):
-        #     sol = [sols[j][i] for j in range(self.numAdvertisers)]
-        #     print(sol)
-        # return res
 
     def getPRD(self, i):
         res = self.PRD()

@@ -24,7 +24,7 @@ class SyntheticData:
         self.weights = self.listToMat(np.random.exponential(self.scale, self.numAdvs * self.numImpTypes))
         return self.weights
     
-    def gausDistList(self, sd):
+    def gausDistList(self, sd = 0):
         self.displayTimes = np.random.normal(random.uniform(0, 1), sd, self.numImpTypes * self.numImpPerType)
         return self.displayTimes
     

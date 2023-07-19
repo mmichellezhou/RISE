@@ -35,24 +35,7 @@ class TestOnlineAdAllocWithPred:
         self.printRuntime()
     
 if __name__ == "__main__":
-    # old manual tests
-    # print("---------- test 1 ----------")
-    # test1 = TestOnlineAdAllocWithPred([2, 1], [[2, 1, 10], [100, 2, 1]])
-    # test1.runAllTests(1)
-    # print("---------- test 2 ----------")
-    # test2 = TestOnlineAdAllocWithPred([1, 1], [[0, 2, 50], [3, 10, 30]])
-    # test2.runAllTests(1)
-    # print("---------- test 3 ----------")
-    # test3 = TestOnlineAdAllocWithPred([1, 1], [[0, 2, 50], [3, 10, 30]])
-    # test3.runAllTests(2)
-    # print("---------- test 4 ----------")
-    # test4 = TestOnlineAdAllocWithPred([3, 2], [[2, 10, 4, 0], [1, 16, 0, 9]])
-    # test4.runAllTests(1)
-    # print("---------- test 5 ----------")
-    # test5 = TestOnlineAdAllocWithPred([2, 1, 3, 1], [[5, 50, 7, 4], [1, 2, 8, 4], [10, 0, 9, 30], [3, 0, 13, 1]])
-    # test5.runAllTests(3)
-
-    # new manual tests
+    # manual tests
     print("---------- manual test 1 ----------")
     test1 = TestOnlineAdAllocWithPred([2, 1], [(0, 0), (3, 1), (1, 2), (2, 3)], [[10, 12, 2, 1], [3, 7, 21, 6]])
     test1.runAllTests(1)
@@ -61,20 +44,52 @@ if __name__ == "__main__":
     print("---------- synthetic test 1 ----------")
     sData1 = SyntheticData(10, 10, 10, 10)
     weights1 = sData1.expDistMat()
-    sData1.gausDistList(10)
+    sData1.gausDistList()
     budgets1 = sData1.sampleBudgets(5, 20)
     impressions1 = sData1.sampleImps()
     sTest1 = TestOnlineAdAllocWithPred(budgets1, impressions1, weights1)
     sTest1.runAllTests(1)
+    # runtime: ~10-20s
 
-    # print("---------- synthetic test 2 ----------")
-    # sData2 = SyntheticData(10, 10, 20, 10)
-    # weights2 = sData2.expDistMat()
-    # sData2.gausDistList(10)
-    # budgets2 = sData2.sampleBudgets(5, 40)
-    # impressions2 = sData2.sampleImps()
-    # sTest2 = TestOnlineAdAllocWithPred(budgets2, impressions2, weights2)
-    # sTest2.runAllTests(2)
+    print("---------- synthetic test 2 ----------")
+    sData2 = SyntheticData(10, 10, 20, 10)
+    weights2 = sData2.expDistMat()
+    sData2.gausDistList()
+    budgets2 = sData2.sampleBudgets(10, 40)
+    impressions2 = sData2.sampleImps()
+    sTest2 = TestOnlineAdAllocWithPred(budgets2, impressions2, weights2)
+    sTest2.runAllTests(2)
+    # runtime: ~80-120s
+
+    print("---------- synthetic test 3 ----------")
+    sData3 = SyntheticData(10, 10, 30, 10)
+    weights3 = sData3.expDistMat()
+    sData3.gausDistList()
+    budgets3 = sData3.sampleBudgets(10, 40)
+    impressions3 = sData3.sampleImps()
+    sTest3 = TestOnlineAdAllocWithPred(budgets3, impressions3, weights3)
+    sTest3.runAllTests(2)
+    # runtime: ~300s
+
+    print("---------- synthetic test 4 ----------")
+    sData4 = SyntheticData(10, 5, 30, 10)
+    weights4 = sData4.expDistMat()
+    sData4.gausDistList()
+    budgets4 = sData4.sampleBudgets(30, 120)
+    impressions4 = sData4.sampleImps()
+    sTest4 = TestOnlineAdAllocWithPred(budgets4, impressions4, weights4)
+    sTest4.runAllTests(1)
+    # runtime: ~110-120s
+
+    print("---------- synthetic test 5 ----------")
+    sData5 = SyntheticData(5, 10, 40, 10)
+    weights5 = sData5.expDistMat()
+    sData5.gausDistList()
+    budgets5 = sData5.sampleBudgets(20, 80)
+    impressions5 = sData5.sampleImps()
+    sTest5 = TestOnlineAdAllocWithPred(budgets5, impressions5, weights5)
+    sTest5.runAllTests(2)
+    # runtime: ~1320s
 
     
     
