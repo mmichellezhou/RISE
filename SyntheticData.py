@@ -4,13 +4,14 @@ import matplotlib.pyplot as plt
 
 class SyntheticData:
 
-    def __init__(self, scale, numAdvs, numImpTypes, numImpPerType):
-        self.scale = scale
+    def __init__(self, numAdvs, numImpTypes, numImpPerType, scale = 10):
         self.numAdvs = numAdvs
         self.numImpTypes = numImpTypes
+        self.scale = scale
         self.weights = []
         self.displayTimes = []
         self.numImpPerType = numImpPerType
+        self.numImpressions = self.numImpTypes * self.numImpPerType
         self.budgets = []
         self.impressions = []
 
@@ -25,7 +26,7 @@ class SyntheticData:
         return self.weights
     
     def gausDistList(self, sd = 0):
-        self.displayTimes = np.random.normal(random.uniform(0, 1), sd, self.numImpTypes * self.numImpPerType)
+        self.displayTimes = np.random.normal(random.uniform(0, 1), sd, self.numImpressions)
         return self.displayTimes
     
     def sampleBudgets(self, min, max):
