@@ -32,12 +32,10 @@ class OnlineAdAllocWithPred:
                 epsilon = 0.1
             sol = self.PRDDual(epsilon)
             self.predictions = self.DualBase(sol[0])
-            print("predictions: " + str(self.predictions))
         elif self.predictor == 2:
             print("Previous Day")
             sol = self.PRDDual(epsilon, prevImps)
             self.predictions = self.DualBase(sol[0])
-            print("predictions: " + str(self.predictions))
         else:
             print("Invalid predictor.")
 
@@ -45,7 +43,6 @@ class OnlineAdAllocWithPred:
     def PRDDual(self, epsilon, prevImps = []):
         # print("In PRDDual.")
         # sampleImps = self.impressions
-        print(epsilon, prevImps)
         if epsilon == -1 and prevImps:
             sampleImps = prevImps
         elif epsilon != -1 and not prevImps:
@@ -72,7 +69,7 @@ class OnlineAdAllocWithPred:
                     x = np.append(x, [-1.0] * 2)
                     I = np.append(I, [index, index])
                     J = np.append(J, [i, self.numAdvertisers + j])
-                b[index] = self.weights[i][sampleImps[j][0]]
+                b[index] = -1.0 * self.weights[i][sampleImps[j][0]]
                 c[self.numAdvertisers + j] = 1.0
             x = np.append(x, [-1.0])
             I = np.append(I, [self.numAdvertisers * numSampleImps + i])
@@ -259,7 +256,7 @@ class OnlineAdAllocWithPred:
             print("Run Algorithm 1 first.")
         if self.OPT == 0:
             self.OptimumSolution(self.PRDPrimal())
-        # print("ALG: " + str(self.ALG) + ", OPT: " + str(self.OPT) + ", PRD: " + str(self.PRD))
+        print("ALG: " + str(self.ALG) + ", OPT: " + str(self.OPT) + ", PRD: " + str(self.PRD))
         robustness = self.ALG/self.OPT
         consistency = self.ALG/self.PRD
         return (robustness, consistency)
