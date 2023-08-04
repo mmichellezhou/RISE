@@ -25,16 +25,23 @@ class SyntheticData:
         self.weights = self.listToMat(np.random.exponential(self.scale, self.numAdvs * self.numImpTypes))
         return self.weights
     
-    def gausDistList(self, sd = 0):
+    def gausDistList(self, sd = 10):
         self.displayTimes = np.random.normal(random.uniform(0, 1), sd, self.numImpressions)
+        print(self.displayTimes)
         return self.displayTimes
     
-    def sampleBudgets(self, min, max):
+    def sampleBudgets(self, min, max, oneEqualToMin = False):
         if min == 0:
-            print("Choose a min greater than 0.")
+            print("Min must be greater than 0.")
+            return
+        if min > max:
+            print("Min is greater than max.")
+            max += min
             return
         for adv in range(self.numAdvs):
             self.budgets.append(random.randrange(min, max + 1))
+        if oneEqualToMin:
+            self.budgets[random.randrange(0, len(self.budgets))] = min
         return self.budgets
 
     def sampleImps(self):
