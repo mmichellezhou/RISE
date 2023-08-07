@@ -31,6 +31,7 @@ class OnlineAdAllocWithPred:
         if self.predictor == 0:
             print("OPT")
             self.predictions = self.OptimumSolution(self.PRDPrimal())
+            print("OPT predictions: " + str(self.predictions))
         elif self.predictor == 1:
             print("Dual Base")
             if self.epsilon == -1:
@@ -39,6 +40,7 @@ class OnlineAdAllocWithPred:
             # self.sampleImpsD = self.impressions
             # print("sample impressions: " + str(self.sampleImpsD))
             self.predictions = self.DualBase(self.PRDDual()[0])
+            print("Dual Base predictions: " + str(self.predictions))
         elif self.predictor == 2:
             print("Previous Day")
             if not len(self.prevImps):
@@ -102,7 +104,7 @@ class OnlineAdAllocWithPred:
         # self.LPRuntime += end - start
 
         thresholds = sol['x'][:self.numAdvertisers]
-        print("thresholds: " + str(thresholds))
+        # print("thresholds: " + str(thresholds))
         discGains = sol['x'][self.numAdvertisers:]
         # print("discounted gains: " + str(discGains))
 
@@ -162,6 +164,7 @@ class OnlineAdAllocWithPred:
         # self.LPRuntime += end - start
 
         self.solOPT = sol['x']
+        # print("sol: " + str(self.solOPT))
 
         return self.solOPT
 
@@ -173,6 +176,7 @@ class OnlineAdAllocWithPred:
             ws = [sol[a * self.numSampleImpsP + i] for a in range(self.numAdvertisers)]
             a = ws.index(max(ws))
             res[a].append(i)
+            # print("adding to OPT: " + str(self.weights[a][self.sampleImpsP[i][0]]))
             self.OPT += self.weights[a][self.sampleImpsP[i][0]]
         
         if self.predictor == 0:
@@ -261,9 +265,11 @@ class OnlineAdAllocWithPred:
             if len(self.advertisers[a]) == self.budgets[a]:
                 temp = self.advertisers[a].pop(0)
                 self.dummyAdvertiser.append(temp)
+                self.ALG -= self.weights[a][temp[0]]
                 # print("temp: " + str(self.weights[a][temp[0]]) + ", t: " + str(self.weights[a][t[0]]))
             self.insert(a, t)
             # print("\ta: " + str(self.advertisers[a]))
+            # print("adding to ALG: " + str(self.weights[a][t[0]]))
             self.ALG += self.weights[a][t[0]]
             if self.threshMethod == 0:
                 # thresholds as exponential averages of weights
@@ -294,6 +300,7 @@ class OnlineAdAllocWithPred:
             if len(self.advertisers[a]) == self.budgets[a]:
                 temp = self.advertisers[a].pop(0)
                 self.dummyAdvertiser.append(temp)
+                self.ALG -= self.weights[a][temp[0]]
             self.insert(a, t)
             self.ALG += self.weights[a][t[0]]
             if self.threshMethod == 0:
