@@ -21,7 +21,7 @@ class OnlineAdAllocWithPred:
         self.dummyAdvertiser = []
         self.thresholds = [0] * self.numAdvertisers
         self.runtime = 0
-        # self.LPRuntime = 0
+        self.LPRuntime = 0
         self.ALG = 0
         self.OPT = 0
         self.PRD = 0
@@ -31,7 +31,7 @@ class OnlineAdAllocWithPred:
         if self.predictor == 0:
             print("OPT")
             self.predictions = self.OptimumSolution(self.PRDPrimal())
-            print("OPT predictions: " + str(self.predictions))
+            # print("OPT predictions: " + str(self.predictions))
         elif self.predictor == 1:
             print("Dual Base")
             if self.epsilon == -1:
@@ -40,7 +40,7 @@ class OnlineAdAllocWithPred:
             # self.sampleImpsD = self.impressions
             # print("sample impressions: " + str(self.sampleImpsD))
             self.predictions = self.DualBase(self.PRDDual()[0])
-            print("Dual Base predictions: " + str(self.predictions))
+            # print("Dual Base predictions: " + str(self.predictions))
         elif self.predictor == 2:
             print("Previous Day")
             if not len(self.prevImps):
@@ -53,7 +53,10 @@ class OnlineAdAllocWithPred:
                 self.p = 0.9
             self.predictions = self.OptimumSolution(self.PRDPrimal(self.p))
             # print("before corrupt: " + str(self.predictions))
-            self.corrupt()
+            if self.predictor == 3:
+                self.corrupt()
+            else:
+                self.corrupt(False)
             # print("after corrupt: " + str(self.predictions))
         else:
             print("Invalid predictor.")
@@ -98,10 +101,10 @@ class OnlineAdAllocWithPred:
         c = matrix(c.tolist())
         # print("c: " + str(c))
 
-        # start = time.time()
+        start = time.time()
         sol = solvers.lp(c, A, b)
-        # end = time.time()
-        # self.LPRuntime += end - start
+        end = time.time()
+        self.LPRuntime += end - start
 
         thresholds = sol['x'][:self.numAdvertisers]
         # print("thresholds: " + str(thresholds))
@@ -158,10 +161,10 @@ class OnlineAdAllocWithPred:
         c = matrix(c.tolist())
         # print("c: " + str(c))
 
-        # start = time.time()
+        start = time.time()
         sol = solvers.lp(c, A, b)
-        # end = time.time()
-        # self.LPRuntime += end - start
+        end = time.time()
+        self.LPRuntime += end - start
 
         self.solOPT = sol['x']
         # print("sol: " + str(self.solOPT))
@@ -276,7 +279,7 @@ class OnlineAdAllocWithPred:
                 self.thresholds[a] = self.updateThresh(a, self.alpha)
             else:
                 # thresholds as lowest weights
-                self.thresholds[a] = self.advertisers[a][0][0]
+                self.thresholds[a] = self.weights[a][self.advertisers[a][0][0]]
             # print("\tthreshold: " + str(self.thresholds[a]))
         end = time.time()
         self.runtime = end - start
@@ -289,7 +292,7 @@ class OnlineAdAllocWithPred:
         self.alpha = alpha
         for i in range(len(self.impressions)):
             t = self.impressions[i]
-            if random.random() < q:
+            if random.random() <= q:
                 a = self.maxADiscGain(t, self.thresholds)
             else:
                 a = self.getPRD(i)
@@ -297,6 +300,7 @@ class OnlineAdAllocWithPred:
             # if discounted gain is negative, continue to next impression
             if (discGainEXP <= 0):
                 self.dummyAdvertiser.append(t)
+                continue
             if len(self.advertisers[a]) == self.budgets[a]:
                 temp = self.advertisers[a].pop(0)
                 self.dummyAdvertiser.append(temp)
@@ -308,7 +312,7 @@ class OnlineAdAllocWithPred:
                 self.thresholds[a] = self.updateThresh(a, self.alpha)
             else:
                 # thresholds as lowest weights
-                self.thresholds[a] = self.advertisers[a][0][0]
+                self.thresholds[a] = self.weights[a][self.advertisers[a][0][0]]
         end = time.time()
         self.runtime = end - start
         

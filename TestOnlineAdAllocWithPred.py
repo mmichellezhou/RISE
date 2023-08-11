@@ -2,12 +2,14 @@ from OnlineAdAllocWithPred import OnlineAdAllocWithPred
 from SyntheticData import SyntheticData
 import time
 import matplotlib.pyplot as plt
-import math
+from matplotlib.path import Path
+from matplotlib.patches import PathPatch
+import numpy as np
 
 class TestOnlineAdAllocWithPred:
 
-    def __init__(self, b, t, w, predictor = 0, epsilon = -1, prevImps = [], threshMethod = 0):
-        self.OAAWP = OnlineAdAllocWithPred(b, t, w, predictor, epsilon, prevImps, threshMethod)
+    def __init__(self, b, t, w, predictor = 0, epsilon = -1, prevImps = [], p = -1, threshMethod = 0):
+        self.OAAWP = OnlineAdAllocWithPred(b, t, w, predictor, epsilon, prevImps, p, threshMethod)
         self.predictor = predictor
         self.runtime = 0
 
@@ -54,8 +56,8 @@ class TestOnlineAdAllocWithPred:
         print("Robustness: " + str(self.OAAWP.getRobAndCon()[0]) + ", Consistency: " + str(self.OAAWP.getRobAndCon()[1]))
 
     def printRuntime(self):
-        print("Runtime: " + str(self.OAAWP.runtime) + " s")
-        # print("LP Runtime: " + str(self.OAAWP.LPRuntime) + " s")
+        print("Runtime: " + str(self.OAAWP.runtime + self.OAAWP.LPRuntime) + " s")
+        print("LP Runtime: " + str(self.OAAWP.LPRuntime) + " s")
 
     def runAllTests(self, alpha, q = -1, results = False, print = True):
         if q == -1:
@@ -68,6 +70,29 @@ class TestOnlineAdAllocWithPred:
             self.printThresholds(results)
             self.printRobustnessAndConsistency()
             self.printRuntime()
+    
+    def draw_error_band(self, ax, x, y, err, **kwargs):
+        # Calculate normals via centered finite differences (except the first point
+        # which uses a forward difference and the last point which uses a backward
+        # difference).
+        dx = np.concatenate([[x[1] - x[0]], x[2:] - x[:-2], [x[-1] - x[-2]]])
+        dy = np.concatenate([[y[1] - y[0]], y[2:] - y[:-2], [y[-1] - y[-2]]])
+        l = np.hypot(dx, dy)
+        nx = dy / l
+        ny = -dx / l
+
+        # end points of errors
+        xp = x + nx * err
+        yp = y + ny * err
+        xn = x - nx * err
+        yn = y - ny * err
+
+        vertices = np.block([[xp, xn[::-1]],
+                            [yp, yn[::-1]]]).T
+        codes = np.full(len(vertices), Path.LINETO)
+        codes[0] = codes[len(xp)] = Path.MOVETO
+        path = Path(vertices, codes)
+        ax.add_patch(PathPatch(path, **kwargs))
     
 if __name__ == "__main__":
     # manual tests
@@ -88,6 +113,8 @@ if __name__ == "__main__":
     # print("impressions: " + str(impressions1))
     # # OPT
     # sTest1 = TestOnlineAdAllocWithPred(budgets1, impressions1, weights1)
+    # sTest1.runAllTests(1)
+    # sTest1 = TestOnlineAdAllocWithPred(budgets1, impressions1, weights1, 0, -1, [], -1, 1)
     # sTest1.runAllTests(1)
     # # Dual Base
     # sTest1 = TestOnlineAdAllocWithPred(budgets1, impressions1, weights1, 1)
@@ -117,10 +144,10 @@ if __name__ == "__main__":
     # sTest2.runAllTests(100, False)
 
     # print("---------- small synthetic test 3 ----------")
-    # sData3 = SyntheticData(10, 30, 10)
+    # sData3 = SyntheticData(20, 20, 20)
     # weights3 = sData3.expDistMat()
     # sData3.gausDistList()
-    # budgets3 = sData3.sampleBudgets(15, 60)
+    # budgets3 = sData3.sampleBudgets(10, 40)
     # impressions3 = sData3.sampleImps()
     # sTest3 = TestOnlineAdAllocWithPred(budgets3, impressions3, weights3)
     # sTest3.runAllTests(2, False)
@@ -196,79 +223,110 @@ if __name__ == "__main__":
     # sTest10.runAllTests(1.5, False)
 
     # graphs
-    figure, axis = plt.subplots(1, 3)
-    for B in [2, 10, 20, float('inf')]:
-        alphas = []
-        consistencies = []
-        robustnesses = []
-        e = (1 + 1 / B) ** B
-        for alpha in range(3, 30):
-            alpha /= 3
-            if B == float('inf'):
-                consistency = (1 + 1 / (math.e ** alpha - 1) * max((math.e ** alpha - (math.e ** alpha - 1) / alpha) / alpha, alpha)) ** (-1)
-                robustness = (math.e ** alpha - 1) / (alpha * math.e ** alpha)
-            else:
-                alphaB = B * (e ** (alpha / B) - 1)
-                consistency = (1 + 1 / (e ** alpha - 1) * max((1 / alphaB) * (e ** alpha - (e ** alpha - 1) / alphaB), math.log(e ** alpha))) ** (-1)
-                robustness = (e ** alpha - 1)/(B * e ** alpha * (e ** (alpha/B) - 1))
-            alphas.append(alpha)
-            consistencies.append(consistency)
-            robustnesses.append(robustness)
-        axis[0].plot(alphas, consistencies)
-        axis[1].plot(alphas, robustnesses)
-        axis[2].plot(consistencies, robustnesses, label = "B = " + str(B))
-    axis.flat[0].set(xlabel = "\u03B1", ylabel = "Consistency")
-    axis.flat[1].set(xlabel = "\u03B1", ylabel = "Robustness")
-    axis.flat[2].set(xlabel = "Consistency", ylabel = "Robustness")
-    axis[2].legend()
-    plt.show()
-
-    # figure, axis = plt.subplots(1, 2)
-
-    # sData = SyntheticData(10, 10, 10)
-    # weights1 = sData.expDistMat()
-    # sData.gausDistList()
-    # budgets1 = sData.sampleBudgets(5, 20, True)
-    # impressions1 = sData.sampleImps()
-    # print("impressions: " + str(impressions1))
-
-    # prevData1 = SyntheticData(10, 5, 5)
-    # prevData1.gausDistList()
-    # prevImps = prevData1.sampleImps()
-    # print("previous impressions: " + str(prevImps))
-    
-    # labels = ["OPT", "DualBase", "PreviousDay", "OPT random corruption", "OPT biased corruption", "", "", "", "", ""]
-    # colors = ["blue", "orange", "purple", "green", "red", "blue", "orange", "purple", "green", "red"]
-    # linestyles = ["solid", "solid", "solid", "solid", "solid", "dashed", "dashed", "dashed", "dashed", "dashed", ]
-
-    # numPRD = 10
-
-    # for PRD in range(numPRD):
+    # figure, axis = plt.subplots(1, 3)
+    # for B in [2, 10, 20, float('inf')]:
     #     alphas = []
     #     consistencies = []
     #     robustnesses = []
+    #     e = (1 + 1 / B) ** B
+    #     for alpha in range(3, 30):
+    #         alpha /= 3
+    #         if B == float('inf'):
+    #             consistency = (1 + 1 / (math.e ** alpha - 1) * max((math.e ** alpha - (math.e ** alpha - 1) / alpha) / alpha, alpha)) ** (-1)
+    #             robustness = (math.e ** alpha - 1) / (alpha * math.e ** alpha)
+    #         else:
+    #             alphaB = B * (e ** (alpha / B) - 1)
+    #             consistency = (1 + 1 / (e ** alpha - 1) * max((1 / alphaB) * (e ** alpha - (e ** alpha - 1) / alphaB), math.log(e ** alpha))) ** (-1)
+    #             robustness = (e ** alpha - 1)/(B * e ** alpha * (e ** (alpha/B) - 1))
+    #         alphas.append(alpha)
+    #         consistencies.append(consistency)
+    #         robustnesses.append(robustness)
+    #     axis[0].plot(alphas, consistencies)
+    #     axis[1].plot(alphas, robustnesses)
+    #     axis[2].plot(consistencies, robustnesses, label = "B = " + str(B))
+
+    # axis[0].set_aspect(1.0/axis[0].get_data_ratio(), adjustable='box')
+    # axis[1].set_aspect(1.0/axis[1].get_data_ratio(), adjustable='box')
+    # axis[2].set_aspect(1.0/axis[2].get_data_ratio(), adjustable='box')
+
+    # axis.flat[0].set(xlabel = "\u03B1", ylabel = "Consistency")
+    # axis.flat[1].set(xlabel = "\u03B1", ylabel = "Robustness")
+    # axis.flat[2].set(xlabel = "Consistency", ylabel = "Robustness")
+
+    # axis[2].legend()
+
+    # plt.show()
+
+    figure, axis = plt.subplots(1, 2)
+
+    sData = SyntheticData(10, 10, 10, 1.5)
+    weights1 = sData.expDistMat()
+    sData.gausDistList()
+    budgets1 = sData.sampleBudgets(5, 40)
+    impressions1 = sData.sampleImps()
+    # print("impressions: " + str(impressions1))
+
+    prevData1 = SyntheticData(10, 10, 8, 1.5)
+    prevData1.gausDistList()
+    prevImps = prevData1.sampleImps()
+    # print("previous impressions: " + str(prevImps))
+    
+    sTestOPT = TestOnlineAdAllocWithPred(budgets1, impressions1, weights1)
+    sTestDualBase = TestOnlineAdAllocWithPred(budgets1, impressions1, weights1, 1)
+    sTestPrevDay = TestOnlineAdAllocWithPred(budgets1, impressions1, weights1, 2, -1, prevImps)
+    sTestOPTRC = TestOnlineAdAllocWithPred(budgets1, impressions1, weights1, 3)
+    sTestOPTBC = TestOnlineAdAllocWithPred(budgets1, impressions1, weights1, 4)
+
+    # sTestOPT = TestOnlineAdAllocWithPred(budgets1, impressions1, weights1, 0, -1, [], -1, 1)
+    # sTestDualBase = TestOnlineAdAllocWithPred(budgets1, impressions1, weights1, 1, -1, [], -1, 1)
+    # sTestPrevDay = TestOnlineAdAllocWithPred(budgets1, impressions1, weights1, 2, -1, prevImps, -1, 1)
+    # sTestOPTRC = TestOnlineAdAllocWithPred(budgets1, impressions1, weights1, 3, -1, [], -1, 1)
+    # sTestOPTBC = TestOnlineAdAllocWithPred(budgets1, impressions1, weights1, 4, -1, [], -1, 1)
+
+    labels = ["OPT", "DualBase", "PreviousDay", "OPT random corruption p = 0.9", "OPT biased corruption p = 0.9", "", "", "", "", "", "Worst-Case Baseline"]
+    colors = ["tab:blue", "tab:orange", "tab:purple", "tab:green", "tab:red", "tab:blue", "tab:orange", "tab:purple", "tab:green", "tab:red", "black"]
+    linestyles = ["solid", "solid", "solid", "solid", "solid", "dashed", "dashed", "dashed", "dashed", "dashed", "solid"]
+
+    numPRD = 11
+
+    # for PRD in range(numPRD):
+    #     alphas = []
+    #     consistency = []
+    #     robustness = []
     #     prevImps1 = []
 
-    #     if PRD == 2:
-    #         prevImps1 = prevImps
-        
-    #     sTest = TestOnlineAdAllocWithPred(budgets1, impressions1, weights1, PRD if PRD < 5 else PRD - 5, -1, prevImps)
+    #     if PRD in [0, 5, 10]:
+    #         sTest = sTestOPT
+    #     elif PRD in [1, 6]:
+    #         sTest = sTestDualBase
+    #     elif PRD in [2, 7]:
+    #         sTest = sTestPrevDay
+    #     elif PRD in [3, 8]:
+    #         sTest = sTestOPTRC
+    #     else:
+    #         sTest = sTestOPTBC
 
     #     for alpha in range(2, 11):
     #         alpha /= 2
     #         if PRD < 5:
-    #             sTest.runAllTests(alpha)
+    #             sTest.runAllTests(alpha, -1)
+    #         elif PRD == 10:
+    #             sTest.runAllTests(alpha, 1, False, False)
     #         else:
-    #             sTest.runAllTests(alpha, 1 / alpha)
+    #             sTest.runAllTests(alpha, 1 / alpha, False, False)
     #         alphas.append(alpha)
-    #         robustnesses.append(sTest.OAAWP.getRobAndCon()[0])
-    #         consistencies.append(sTest.OAAWP.getRobAndCon()[1])
+    #         robustness.append(sTest.OAAWP.getRobAndCon()[0])
+    #         consistency.append(sTest.OAAWP.getRobAndCon()[1])
 
-    #     print("robustnesses: " + str(robustnesses) + ", consistencies: " + str(consistencies))
+    #     print("robustness: " + str(robustness) + ", consistency: " + str(consistency))
         
-    #     axis[0].plot(alphas, consistencies, color = colors[PRD], linestyle = linestyles[PRD])        
-    #     axis[1].plot(alphas, robustnesses, color = colors[PRD], linestyle = linestyles[PRD], label = labels[PRD])
-        
+    #     if PRD != 10:
+    #         axis[0].plot(alphas, consistency, color = colors[PRD], linestyle = linestyles[PRD])        
+    #     axis[1].plot(alphas, robustness, color = colors[PRD], linestyle = linestyles[PRD], label = labels[PRD])
+    
+    # axis[0].set_aspect(1.0/axis[0].get_data_ratio(), adjustable='box')
+    # axis[1].set_aspect(1.0/axis[1].get_data_ratio(), adjustable='box')
+
     # axis.flat[0].set(xlabel = "\u03B1", ylabel = "Consistency")
     # axis.flat[1].set(xlabel = "\u03B1", ylabel = "Robustness")
 
@@ -276,35 +334,72 @@ if __name__ == "__main__":
 
     # plt.show()
 
-    # alphas = [alpha / 2 for alpha in range(2, 11)]
-    # consistencies = []
-    # robustnesses = []
-    # epsilon = -1
+    consistencies = []
+    robustnesses = []
     
-    # for PRD in range(5):
-    #     consistencies.append([])
-    #     robustnesses.append([])
-    #     prevImps1 = []
+    for PRD in range(numPRD):
+        consistencies = []
+        robustnesses = []
+        prevImps1 = []
 
-    #     if labels[PRD] == "PreviousDay":
-    #         prevImps1 = prevImps
-            
-    #     for alpha in range(2, 11):
-    #         alpha /= 2
-    #         sTest = TestOnlineAdAllocWithPred(budgets1, impressions1, weights1, PRD, epsilon, prevImps)
-    #         sTest.runAllTests(alpha)
-    #         robustnesses[PRD].append(sTest.OAAWP.getRobAndCon()[0])
-    #         consistencies[PRD].append(sTest.OAAWP.getRobAndCon()[1])
+        if PRD in [0, 5, 10]:
+            sTest = sTestOPT
+        elif PRD in [1, 6]:
+            sTest = sTestDualBase
+        elif PRD in [2, 7]:
+            sTest = sTestPrevDay
+        elif PRD in [3, 8]:
+            sTest = sTestOPTRC
+        else:
+            sTest = sTestOPTBC
 
-    #     print("robustnesses: " + str(robustnesses) + ", consistencies: " + str(consistencies))
+        for i in range(5):
+            alphas = []
+            consistency = []
+            robustness = []
+
+            for alpha in range(2, 11):
+                alpha /= 2
+                if PRD < 5:
+                    sTest.runAllTests(alpha, -1)
+                elif PRD == 10:
+                    sTest.runAllTests(alpha, 1, False, False)
+                else:
+                    sTest.runAllTests(alpha, 1 / alpha, False, False)
+                alphas.append(alpha)
+                robustness.append(sTest.OAAWP.getRobAndCon()[0])
+                consistency.append(sTest.OAAWP.getRobAndCon()[1])
+            robustnesses.append(robustness)
+            consistencies.append(consistency)
+
+        print("robustnesses: " + str(robustnesses) + ", consistencies: " + str(consistencies))
+
+        avgRob = np.array([sum(rob) / len(rob) for rob in zip(*robustnesses)])
+        avgCon = np.array([sum(con) / len(con) for con in zip(*consistencies)])
+
+        print(avgRob, avgCon)
+
+        errRob = max(max([max(rob) for rob in robustnesses]) - sum(avgRob) / len(avgRob), sum(avgRob) / len(avgRob) - min([min(rob) for rob in robustnesses]))
+        errCon = max(max([max(con) for con in consistencies]) - sum(avgCon) / len(avgCon), sum(avgCon) / len(avgCon) - min([min(con) for con in consistencies]))
+
+        print(errRob, errCon)
+
+        if PRD != 10:
+            axis[0].plot(alphas, avgCon, color = colors[PRD], linestyle = linestyles[PRD])        
+        axis[1].plot(alphas, avgRob, color = colors[PRD], linestyle = linestyles[PRD], label = labels[PRD])
+        
+        if PRD < 5:
+            # sTest.draw_error_band(axis[0], np.array(alphas), avgCon, err=errCon, facecolor=colors[PRD], edgecolor="none", alpha=.3)
+            # sTest.draw_error_band(axis[1], np.array(alphas), avgRob, err=errRob, facecolor=colors[PRD], edgecolor="none", alpha=.3)
+            axis[0].fill_between(np.array(alphas), avgCon - errCon, avgCon + errCon, facecolor = colors[PRD], edgecolor="none", alpha=.25)
+            axis[1].fill_between(np.array(alphas), avgRob - errRob, avgRob + errRob, facecolor = colors[PRD], edgecolor="none", alpha=.25)
     
-    # for PRD in range(5):
-    #     axis[0].plot(alphas, consistencies[PRD])        
-    #     axis[1].plot(alphas, robustnesses[PRD], label = labels[PRD])
-    
-    # axis.flat[0].set(xlabel = "\u03B1", ylabel = "Consistency")
-    # axis.flat[1].set(xlabel = "\u03B1", ylabel = "Robustness")
+    axis[0].set_aspect(1.0/axis[0].get_data_ratio(), adjustable='box')
+    axis[1].set_aspect(1.0/axis[1].get_data_ratio(), adjustable='box')
 
-    # axis[1].legend()
+    axis.flat[0].set(xlabel = "\u03B1", ylabel = "Consistency")
+    axis.flat[1].set(xlabel = "\u03B1", ylabel = "Robustness")
 
-    # plt.show()
+    axis[1].legend()
+
+    plt.show()
